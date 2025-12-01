@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+package-lock.json   # Optional: Some people keep this, but for personal projects, it can be noisy
+yarn.lock
+
+# Environment variables (Safety First!)
+.env
+
+# System Files
+.DS_Store
+
+# Build Outputs (Frontend)
+client/dist/
+client/build/
+
+# Backend Runtime Files (DO NOT UPLOAD THESE)
+server/codes/
+server/outputs/
+server/temp/
+server/core/__pycache__/
+*.out
+*.exe
