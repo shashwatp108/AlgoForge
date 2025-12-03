@@ -25,9 +25,12 @@ export default function Header() {
     const token = localStorage.getItem("token");
     
     if (token) {
-      axios.get("http://localhost:5000/auth/me", {
+      axios.get("https://algoforge-backend-f1ht.onrender.com/auth/me", {
         headers: { Authorization: `Bearer ${token}` }
       })
+      // axios.get("http://localhost:5000/auth/me", {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // })
       .then(res => {
         setUser(res.data);
       })
@@ -47,7 +50,8 @@ export default function Header() {
 
   const handleLogin = () => {
     // Redirect to Backend Google Auth
-    window.location.href = "http://localhost:5000/auth/google";
+    // window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = "https://algoforge-backend-f1ht.onrender.com/auth/google";
   };
 
   return (
