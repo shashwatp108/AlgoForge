@@ -1,0 +1,173 @@
+/* Main Page Layout */
+.editor-page {
+  background-color: #050505;
+  height: 100vh; /* Fixed height to prevent window scroll */
+  color: white;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar */
+.editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 30px;
+  background-color: #111;
+  border-bottom: 1px solid #222;
+  height: 60px;
+}
+
+.toolbar-title {
+  margin: 0;
+  font-size: 16px;
+  color: #ccc;
+  font-weight: 500;
+}
+
+.run-btn {
+  padding: 8px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.run-btn:hover { background-color: #2ec950; }
+.run-btn:disabled { background-color: #444; cursor: not-allowed; }
+
+.save-btn {
+  padding: 8px 16px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Main Workspace */
+.editor-workspace {
+  display: flex;
+  flex: 1;
+  gap: 15px;
+  padding: 15px;
+  height: calc(100vh - 130px);
+  overflow: hidden;
+}
+
+/* Left Panel: EDITOR ONLY (Full Height) */
+.left-panel {
+  flex: 2; /* Takes 2/3 of width */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-wrapper {
+  flex: 1;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #1e1e1e;
+}
+
+/* Right Panel: Output (Top) + Input (Bottom) */
+.right-panel {
+  flex: 1; /* Takes 1/3 of width */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: 100%;
+  min-width: 300px;
+}
+
+/* Output Box (Takes remaining space) */
+.output-section {
+  flex: 1; /* Grows to fill space */
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background-color: #1e1e1e;
+  overflow: hidden;
+}
+
+.output-content {
+  flex: 1;
+  padding: 15px;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Input Box (Fixed height at bottom) */
+.input-section {
+  height: 30%; /* Takes bottom 30% of right panel */
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background-color: #1e1e1e;
+  overflow: hidden;
+}
+
+.section-label {
+  padding: 8px 12px;
+  background-color: #252526;
+  border-bottom: 1px solid #333;
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-textarea {
+  flex: 1;
+  background-color: transparent;
+  color: #d4d4d4;
+  border: none;
+  padding: 10px;
+  resize: none;
+  outline: none;
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+}
+
+/* Status Colors */
+.output-success { color: #4caf50; }
+.output-error { color: #ff4d4d; }
+.output-loading { color: #888; font-style: italic; }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex; justify-content: center; align-items: center; z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+.modal-content {
+  background-color: #1a1a1a; padding: 30px; border-radius: 12px;
+  border: 1px solid #333; width: 400px;
+}
+.modal-title { margin: 0 0 20px 0; color: white; font-size: 20px; }
+.modal-input {
+  width: 100%; padding: 12px; background-color: #252526; border: 1px solid #333;
+  border-radius: 6px; color: white; margin-bottom: 20px; outline: none; font-size: 16px;
+}
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.cancel-btn { padding: 8px 16px; background: transparent; color: #888; border: none; cursor: pointer; }
+.confirm-btn { padding: 8px 16px; background: #2563eb; color: white; border: none; borderRadius: 4px; cursor: pointer; }
