@@ -27,23 +27,32 @@ export default function Profile() {
     }
 
     // 1. Fetch User Data
-    axios.get("http://localhost:5000/auth/me", {
+    axios.get("https://algoforge-backend-f1ht.onrender.com/auth/me", {
       headers: { Authorization: `Bearer ${token}` }
     })
+    // axios.get("http://localhost:5000/auth/me", {
+    //   headers: { Authorization: `Bearer ${token}` }
+    // })
     .then(res => setUser(res.data))
     .catch(() => navigate("/"));
 
     // 2. Fetch Job History
-    axios.get("http://localhost:5000/jobs/history", {
+    axios.get("https://algoforge-backend-f1ht.onrender.com/jobs/history", {
       headers: { Authorization: `Bearer ${token}` }
     })
+    // axios.get("http://localhost:5000/jobs/history", {
+    //   headers: { Authorization: `Bearer ${token}` }
+    // })
     .then(res => setJobs(res.data))
     .catch(err => console.error(err));
 
     // 3. Fetch Saved Snippets
-    axios.get("http://localhost:5000/snippets", {
+    axios.get("https://algoforge-backend-f1ht.onrender.com/snippets", {
       headers: { Authorization: `Bearer ${token}` }
     })
+    // axios.get("http://localhost:5000/snippets", {
+    //   headers: { Authorization: `Bearer ${token}` }
+    // })
     .then(res => setSnippets(res.data))
     .catch(err => console.error(err));
 

@@ -31,7 +31,10 @@ export default function EditorPage() {
     if (loadId) {
       const token = localStorage.getItem("token");
       if (token) {
-        axios.get(`http://localhost:5000/snippets/${loadId}`, {
+        // axios.get(`http://localhost:5000/snippets/${loadId}`, {
+        //   headers: { Authorization: `Bearer ${token}` }
+        // })
+        axios.get(`https://algoforge-backend-f1ht.onrender.com/snippets/${loadId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         .then(res => {
@@ -50,9 +53,12 @@ export default function EditorPage() {
 
     try {
       // Use HTTP for localhost
-      const { data } = await axios.post("http://localhost:5000/run", payload, {
+      const { data } = await axios.post("https://algoforge-backend-f1ht.onrender.com/run", payload, {
          headers: { Authorization: token ? `Bearer ${token}` : "" }
       });
+      // const { data } = await axios.post("http://localhost:5000/run", payload, {
+      //    headers: { Authorization: token ? `Bearer ${token}` : "" }
+      // });
       setOutput(data.output);
     } catch (error: any) {
       if (error.response) {
@@ -72,11 +78,17 @@ export default function EditorPage() {
       return;
     }
     try {
-      await axios.post("http://localhost:5000/snippets", {
+      // await axios.post("http://localhost:5000/snippets", {
+      //   title: snippetTitle,
+      //   code,
+      //   language: "cpp"
+      // },
+      await axios.post("https://algoforge-backend-f1ht.onrender.com/snippets", {
         title: snippetTitle,
         code,
         language: "cpp"
-      }, {
+      },
+       {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIsModalOpen(false);

@@ -37,8 +37,8 @@ export default function Home() {
     };
 
     try {
-      // const { data } = await axios.post("https://algoforge-backend-f1ht.onrender.com/run", payload);
-      const { data } = await axios.post("https://localhost:5000/run", payload);
+      const { data } = await axios.post("https://algoforge-backend-f1ht.onrender.com/run", payload);
+      // const { data } = await axios.post("https://localhost:5000/run", payload);
       setOutput(data.output);
     } catch (error: any) {
       if (error.response) {
@@ -62,9 +62,12 @@ export default function Home() {
     // 2. Check if we are logged in
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
-      axios.get("http://localhost:5000/auth/me", {
+      axios.get("https://algoforge-backend-f1ht.onrender.com/auth/me", {
         headers: { Authorization: `Bearer ${storedToken}` }
       })
+      // axios.get("http://localhost:5000/auth/me", {
+      //   headers: { Authorization: `Bearer ${storedToken}` }
+      // })
       .then(res => setUser(res.data))
       .catch(() => localStorage.removeItem("token"));
     }
@@ -72,7 +75,8 @@ export default function Home() {
 
   const handleLogin = () => {
     // Redirect browser to Backend Google Auth
-    window.location.href = "http://localhost:5000/auth/google";
+    // window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = "https://algoforge-backend-f1ht.onrender.com/auth/google";
   };
 
   const handleLogout = () => {
