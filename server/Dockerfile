@@ -1,27 +1,32 @@
-# 1. Use the official Node.js image as the base (It's a Linux OS)
 FROM node:18-slim
 
-# 2. CRITICAL STEP: Install the C++ Compiler (g++)
-# Install C++ (g++), C (gcc), Python (python3), and Java (default-jdk)
+# 1. Install Compilers
 RUN apt-get update && apt-get install -y g++ gcc python3 default-jdk
 
-# 3. Set the working directory inside the container
+# 2. Create the non-root user
+RUN useradd -m coderrunner
+
 WORKDIR /app
 
-# 4. Copy package.json to install dependencies first (for caching)
+# 3. Copy files (owned by root by default)
 COPY package*.json ./
-
-# 5. Install Node dependencies
 RUN npm install
-
-# 6. Copy the rest of your server code
 COPY . .
 
-# 7. Create the folders for codes and outputs (just in case)
-RUN mkdir -p codes outputs
+# 4. Create temp folders
+RUN mkdir -p codes inputs outputs temp
 
-# 8. Expose the port Render expects
+# 5. PERMISSIONS
+# Give 'coderrunner' write access ONLY to the folders it needs
+# The rest of /app remains root-owned (Read-Only for coderrunner)
+RUN chown -R coderrunner:coderrunner /app/codes
+RUN chown -R coderrunner:coderrunner /app/inputs
+RUN chown -R coderrunner:coderrunner /app/outputs
+RUN chown -R coderrunner:coderrunner /app/temp
+
+# 6. Switch to the non-root user
+USER coderrunner
+
 EXPOSE 5000
 
-# 9. The command to start your server
 CMD ["node", "index.js"]

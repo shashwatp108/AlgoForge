@@ -2,10 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuid } = require('uuid');
 
-const dirCodes = path.join(__dirname, "temp");
+const dirCodes = path.join(__dirname, 'runner_workspace', 'codes'); 
 
 if (!fs.existsSync(dirCodes)) {
-  fs.mkdirSync(dirCodes, { recursive: true });
+    fs.mkdirSync(dirCodes, { recursive: true });
 }
 // Map language names to extensions
 const extensions = {
