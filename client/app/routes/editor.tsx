@@ -8,6 +8,7 @@ import { defaultCodes } from "../utils/defaultCodes"; // Import templates
 import "./editor.css";
 
 const Editor = lazy(() => import("@monaco-editor/react"));
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -35,7 +36,7 @@ export default function EditorPage() {
     if (loadId) {
       const token = localStorage.getItem("token");
       if (token) {
-        axios.get(`http://localhost:5000/snippets/${loadId}`, {
+        axios.get(`${API_URL}/snippets/${loadId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         .then(res => {
@@ -84,7 +85,6 @@ export default function EditorPage() {
     const token = localStorage.getItem("token");
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
       const { data } = await axios.post(`${API_URL}/run`, payload, {
           headers: { Authorization: token ? `Bearer ${token}` : "" }
       });
@@ -107,7 +107,7 @@ export default function EditorPage() {
       return;
     }
     try {
-      await axios.post("http://localhost:5000/snippets", {
+      await axios.post(`${API_URL}/snippets`, {
         title: snippetTitle,
         code,
         language

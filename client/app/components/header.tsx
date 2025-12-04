@@ -6,6 +6,8 @@ export default function Header() {
   const [user, setUser] = useState<any>(null);
   const [searchParams, setSearchParams] = useSearchParams(); // To read URL params
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 
   useEffect(() => {
     // --- CRITICAL FIX START ---
@@ -28,7 +30,7 @@ export default function Header() {
       // axios.get("https://algoforge-backend-f1ht.onrender.com/auth/me", {
       //   headers: { Authorization: `Bearer ${token}` }
       // })
-      axios.get("http://localhost:5000/auth/me", {
+      axios.get(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => {
@@ -50,7 +52,7 @@ export default function Header() {
 
   const handleLogin = () => {
     // Redirect to Backend Google Auth
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = `${API_URL}/auth/google`;
     // window.location.href = "https://algoforge-backend-f1ht.onrender.com/auth/google";
   };
 
