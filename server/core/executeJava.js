@@ -26,10 +26,13 @@ const executeJava = (filepath, inputPath) => {
     // Command: javac Main.java && java Main < input.txt
     const command = `cd "${outDir}" && javac Main.java && java Main < "${inputPath}"`;
 
-    exec(command, (error, stdout, stderr) => {
+    exec(command, { timeout: 2000 }, (error, stdout, stderr) => {
       // Cleanup (Optional)
       // fs.rmSync(outDir, { recursive: true, force: true });
-
+      if (error && error.killed) {
+        reject("Time Limit Exceeded (2s)");
+        return;
+      }
       if (error || stderr) {
         reject(stderr || error.message);
       } else {

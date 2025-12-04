@@ -16,12 +16,20 @@ const executeC = (filepath, inputPath) => {
     // Command: gcc code.c -o code.out && ./code.out < input.txt
     const command = `gcc "${filepath}" -o "${outPath}" && "${outPath}" < "${inputPath}"`;
 
-    exec(command, (error, stdout, stderr) => {
+    exec(command, { timeout: 2000 }, (error, stdout, stderr) => {
+      // 1. Handle Timeout (Process Killed)
+      if (error && error.killed) {
+        reject("Time Limit Exceeded (2s)");
+        return;
+      }
+
+      // 2. Handle Compilation/Runtime Errors
       if (error || stderr) {
         reject(stderr || error.message);
-      } else {
-        resolve(stdout);
+        return;
       }
+
+      resolve(stdout);
     });
   });
 };
