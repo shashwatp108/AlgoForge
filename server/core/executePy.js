@@ -12,7 +12,7 @@ const executePy = (filepath, inputPath) => {
 
     exec(command, { timeout: 5000 }, (error, stdout, stderr) => {
       if (error && error.killed) {
-        reject("Time Limit Exceeded (2s)");
+        reject("Time Limit Exceeded");
         return;
       }
       if (error || stderr) {

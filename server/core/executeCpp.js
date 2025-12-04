@@ -19,7 +19,7 @@ const executeCpp = (filepath, inputPath) => {
     exec(command, { timeout: 5000 }, (error, stdout, stderr) => {
       // 1. Handle Timeout (Process Killed)
       if (error && error.killed) {
-        reject("Time Limit Exceeded (2s)");
+        reject("Time Limit Exceeded");
         return;
       }
 
