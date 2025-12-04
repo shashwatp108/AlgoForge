@@ -1,8 +1,7 @@
 import Header from "../components/header";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router";
-import { Link } from "react-router";
+import { useNavigate, Link } from "react-router";
 
 // Define TypeScript interface for Job
 interface Job {
@@ -18,6 +17,8 @@ export default function Profile() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [snippets, setSnippets] = useState<any[]>([]);
   const navigate = useNavigate();
+
+  // Dynamic API URL
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
@@ -28,30 +29,25 @@ export default function Profile() {
     }
 
     // 1. Fetch User Data
-    // axios.get("https://algoforge-backend-f1ht.onrender.com/auth/me", {
-    //   headers: { Authorization: `Bearer ${token}` }
-    // })
-    axios.get(`${API_URL}/run`, {
+    axios.get(`${API_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => setUser(res.data))
-    .catch(() => navigate("/"));
+    .catch(() => {
+        // If auth fails, kick them out
+        localStorage.removeItem("token");
+        navigate("/");
+    });
 
     // 2. Fetch Job History
-    // axios.get("https://algoforge-backend-f1ht.onrender.com/jobs/history", {
-    //   headers: { Authorization: `Bearer ${token}` }
-    // })
-    axios.get(`${API_URL}/run`, {
+    axios.get(`${API_URL}/jobs/history`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => setJobs(res.data))
     .catch(err => console.error(err));
 
     // 3. Fetch Saved Snippets
-    // axios.get("https://algoforge-backend-f1ht.onrender.com/snippets", {
-    //   headers: { Authorization: `Bearer ${token}` }
-    // })
-    axios.get(`${API_URL}/run`, {
+    axios.get(`${API_URL}/snippets`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => setSnippets(res.data))
@@ -59,7 +55,7 @@ export default function Profile() {
 
   }, []);
 
-  if (!user) return <div style={{background: "#050505", minHeight: "100vh", color: "white", padding: "20px"}}>Loading...</div>;
+  if (!user) return <div style={{background: "#050505", minHeight: "100vh", color: "white", padding: "20px"}}>Loading Profile...</div>;
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#050505", color: "white", fontFamily: "sans-serif" }}>
@@ -76,6 +72,9 @@ export default function Profile() {
             <div>
                 <h1 style={{ margin: 0, fontSize: "32px" }}>{user.username}</h1>
                 <p style={{ color: "#888", marginTop: "5px" }}>{user.email}</p>
+                <div style={{ marginTop: "10px", display: "inline-block", padding: "5px 15px", background: "#2563eb33", color: "#60a5fa", borderRadius: "20px", fontSize: "14px" }}>
+                    Pro Member
+                </div>
             </div>
         </div>
 
@@ -86,9 +85,32 @@ export default function Profile() {
             <StatBox label="Member Since" value={new Date(user.createdAt).toLocaleDateString()} />
         </div>
 
+        {/* Saved Snippets Section */}
+        <h2 style={{ borderBottom: "1px solid #333", paddingBottom: "15px", marginBottom: "20px" }}>Saved Snippets</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "20px", marginBottom: "50px" }}>
+            {snippets.map((snippet) => (
+                <div key={snippet._id} style={{ background: "#111", padding: "20px", borderRadius: "8px", border: "1px solid #333", display: "flex", flexDirection: "column", justifyContent: "space-between", height: "150px" }}>
+                    <div>
+                        <h3 style={{ margin: "0 0 10px 0", fontSize: "18px" }}>{snippet.title}</h3>
+                        <span style={{ fontSize: "12px", color: "#666", background: "#222", padding: "3px 8px", borderRadius: "4px" }}>
+                            {snippet.language}
+                        </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "20px" }}>
+                        <span style={{ fontSize: "12px", color: "#666" }}>{new Date(snippet.createdAt).toLocaleDateString()}</span>
+                        <Link to={`/editor?loadId=${snippet._id}`}>
+                            <button style={{ background: "#2563eb", color: "white", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontSize: "12px" }}>
+                                Open ↗
+                            </button>
+                        </Link>
+                    </div>
+                </div>
+            ))}
+            {snippets.length === 0 && <p style={{ color: "#666" }}>No saved snippets found.</p>}
+        </div>
+
         {/* Submission History Table */}
         <h2 style={{ borderBottom: "1px solid #333", paddingBottom: "15px", marginBottom: "20px" }}>Recent Activity</h2>
-        
         <div style={{ background: "#111", borderRadius: "8px", border: "1px solid #333", overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                 <thead>
@@ -131,34 +153,6 @@ export default function Profile() {
             </table>
         </div>
 
-        <h2 style={{ borderBottom: "1px solid #333", paddingBottom: "15px", marginBottom: "20px", marginTop: "50px" }}>Saved Snippets</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "20px" }}>
-            {snippets.map((snippet) => (
-                <div key={snippet._id} style={{ background: "#111", padding: "20px", borderRadius: "8px", border: "1px solid #333", display: "flex", flexDirection: "column", justifyContent: "space-between", height: "150px" }}>
-                    <div>
-                        <h3 style={{ margin: "0 0 10px 0", fontSize: "18px" }}>{snippet.title}</h3>
-                        <span style={{ fontSize: "12px", color: "#666", background: "#222", padding: "3px 8px", borderRadius: "4px" }}>
-                            {snippet.language}
-                        </span>
-                    </div>
-                    
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "20px" }}>
-                        <span style={{ fontSize: "12px", color: "#666" }}>{new Date(snippet.createdAt).toLocaleDateString()}</span>
-                        
-                        {/* This Link loads the script into the Editor */}
-                        <Link to={`/editor?loadId=${snippet._id}`}>
-                            <button style={{ background: "#2563eb", color: "white", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontSize: "12px" }}>
-                                Open in Editor ↗
-                            </button>
-                        </Link>
-                    </div>
-                </div>
-            ))}
-    
-    {snippets.length === 0 && (
-        <p style={{ color: "#666" }}>No saved snippets found.</p>
-    )}
-</div>
       </div>
     </div>
   );
