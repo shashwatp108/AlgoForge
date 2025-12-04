@@ -128,7 +128,7 @@ export default function EditorPage() {
   };
 
   return (
-    <div className="editor-page">
+    <div className="editor-page" style={{ minHeight: "100vh", backgroundColor: "#050505", color: "white", fontFamily: "sans-serif" }}>
       <Header />
 
       {/* Toolbar */}
