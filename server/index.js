@@ -51,7 +51,7 @@ const verifyToken = (req, res, next) => {
 
 // Function to create Input File (This was missing!)
 const createInputFile = async (jobId, input) => {
-    const dirInputs = path.join(__dirname, 'inputs');
+    const dirInputs = path.join(process.cwd(), "inputs");
     if (!fs.existsSync(dirInputs)) {
         fs.mkdirSync(dirInputs, { recursive: true });
     }

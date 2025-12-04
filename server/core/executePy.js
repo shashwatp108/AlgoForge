@@ -2,6 +2,12 @@ const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
+const outputPath = path.join(process.cwd(), "outputs");
+
+if (!fs.existsSync(outputPath)) {
+  fs.mkdirSync(outputPath, { recursive: true });
+}
+
 const executePy = (filepath, inputPath) => {
   const jobId = path.basename(filepath).split(".")[0];
   

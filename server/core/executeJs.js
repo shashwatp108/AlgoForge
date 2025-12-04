@@ -1,4 +1,12 @@
 const { exec } = require("child_process");
+const path = require("path");
+const fs = require("fs");
+
+const outputPath = path.join(process.cwd(), "outputs");
+
+if (!fs.existsSync(outputPath)) {
+  fs.mkdirSync(outputPath, { recursive: true });
+}
 
 const executeJs = (filepath, inputPath) => {
   return new Promise((resolve, reject) => {

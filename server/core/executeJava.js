@@ -2,12 +2,13 @@ const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const outputPath = path.join(__dirname, "../../outputs");
+// Use process.cwd() which is safer in Docker
+// In Docker, WORKDIR is /app, so this resolves to /app/outputs
+const outputPath = path.join(process.cwd(), "outputs");
 
 if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
-
 const executeJava = (filepath, inputPath) => {
   const jobId = path.basename(filepath).split(".")[0];
   const outDir = path.join(outputPath, jobId); // Separate folder for class files
