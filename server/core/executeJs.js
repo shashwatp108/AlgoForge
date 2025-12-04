@@ -6,7 +6,7 @@ const executeJs = (filepath, inputPath) => {
     const command = `node "${filepath}" < "${inputPath}"`;
 
     // ADD TIMEOUT: 2000ms
-    exec(command, { timeout: 2000 }, (error, stdout, stderr) => {
+    exec(command, { timeout: 5000 }, (error, stdout, stderr) => {
       if (error && error.killed) {
         reject("Time Limit Exceeded (2s)");
         return;

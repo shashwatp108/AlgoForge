@@ -14,8 +14,10 @@ client/dist/
 client/build/
 
 # Backend Runtime Files (DO NOT UPLOAD THESE)
+outputs/
 server/codes/
 server/outputs/
+server/inputs/
 server/temp/
 server/core/__pycache__/
 *.out

@@ -16,7 +16,7 @@ const executeCpp = (filepath, inputPath) => {
     const command = `g++ "${filepath}" -o "${outPath}" && "${outPath}" < "${inputPath}"`;
 
     // ADD TIMEOUT: 2000ms (2 seconds)
-    exec(command, { timeout: 2000 }, (error, stdout, stderr) => {
+    exec(command, { timeout: 5000 }, (error, stdout, stderr) => {
       // 1. Handle Timeout (Process Killed)
       if (error && error.killed) {
         reject("Time Limit Exceeded (2s)");

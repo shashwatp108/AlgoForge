@@ -10,7 +10,7 @@ const executePy = (filepath, inputPath) => {
     // Note: We use 'python3' (standard on Linux/Mac). On Windows it might be 'python'.
     const command = `python3 "${filepath}" < "${inputPath}"`;
 
-    exec(command, { timeout: 2000 }, (error, stdout, stderr) => {
+    exec(command, { timeout: 5000 }, (error, stdout, stderr) => {
       if (error && error.killed) {
         reject("Time Limit Exceeded (2s)");
         return;
