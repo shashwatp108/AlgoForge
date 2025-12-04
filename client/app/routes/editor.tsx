@@ -2,8 +2,8 @@ import { useState, useEffect, lazy, useRef } from "react";
 import axios from "axios";
 import { useSearchParams } from "react-router";
 import type { Route } from "./+types/editor";
-import Header from "../components/Header";
-import { ClientOnly } from "../components/ClientOnly";
+import Header from "../components/header";
+import { ClientOnly } from "../components/clientOnly";
 import { defaultCodes } from "../utils/defaultCodes"; // Import templates
 import "./editor.css";
 
