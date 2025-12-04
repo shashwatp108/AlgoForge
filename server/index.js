@@ -21,7 +21,8 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.log("MongoDB Error: ", err));
 
-
+// TRUST RENDER'S PROXY (Critical for OAuth to work on HTTPS)
+app.set("trust proxy", 1);
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
