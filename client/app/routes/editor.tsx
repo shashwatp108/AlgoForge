@@ -1,8 +1,10 @@
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, lazy, useRef } from "react";
 import axios from "axios";
 import { useSearchParams } from "react-router";
 import type { Route } from "./+types/editor";
-import Header from "../components/header";
+import Header from "../components/Header";
+import { ClientOnly } from "../components/ClientOnly";
+import { defaultCodes } from "../utils/defaultCodes"; // Import templates
 import "./editor.css";
 
 const Editor = lazy(() => import("@monaco-editor/react"));
@@ -10,12 +12,13 @@ const Editor = lazy(() => import("@monaco-editor/react"));
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "AlgoForge - Editor" },
-    { name: "description", content: "Write and execute C++ code instantly." },
+    { name: "description", content: "Write and execute code instantly." },
   ];
 }
 
 export default function EditorPage() {
-  const [code, setCode] = useState<string>('#include <iostream>\nusing namespace std;\n\nint main() {\n    int x;\n    cin >> x;\n    cout << "Value: " << x << endl;\n    return 0;\n}');
+  const [language, setLanguage] = useState("cpp");
+  const [code, setCode] = useState<string>(defaultCodes["cpp"]); // Load default C++
   const [input, setInput] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -27,17 +30,16 @@ export default function EditorPage() {
   const [searchParams] = useSearchParams();
   const loadId = searchParams.get("loadId");
 
+  // Load Script from URL
   useEffect(() => {
     if (loadId) {
       const token = localStorage.getItem("token");
       if (token) {
-        // axios.get(`http://localhost:5000/snippets/${loadId}`, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // })
-        axios.get(`https://algoforge-backend-f1ht.onrender.com/snippets/${loadId}`, {
+        axios.get(`http://localhost:5000/snippets/${loadId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         .then(res => {
+          setLanguage(res.data.language || "cpp");
           setCode(res.data.code);
           setOutput(`// Loaded script: ${res.data.title}`);
         })
@@ -46,23 +48,50 @@ export default function EditorPage() {
     }
   }, [loadId]);
 
+  // Handle Language Switch with Warning
+  const handleLanguageChange = (newLang: string) => {
+    if (code !== defaultCodes[language as keyof typeof defaultCodes]) {
+        const confirmSwitch = window.confirm(
+            "Switching languages will reset your current code. Are you sure?"
+        );
+        if (!confirmSwitch) return;
+    }
+    setLanguage(newLang);
+    setCode(defaultCodes[newLang as keyof typeof defaultCodes]);
+  };
+
+  // Keyboard Shortcuts (Cmd+S, Cmd+Enter)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        setIsModalOpen(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [code, language, input]); // Dependencies needed for handleSubmit closure
+
   const handleSubmit = async () => {
+    if (loading) return; // Prevent double submission
     setLoading(true);
-    const payload = { language: "cpp", code, input };
+    const payload = { language, code, input };
     const token = localStorage.getItem("token");
 
     try {
-      // Use HTTP for localhost
-      const { data } = await axios.post("https://algoforge-backend-f1ht.onrender.com/run", payload, {
-         headers: { Authorization: token ? `Bearer ${token}` : "" }
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const { data } = await axios.post(`${API_URL}/run`, payload, {
+          headers: { Authorization: token ? `Bearer ${token}` : "" }
       });
-      // const { data } = await axios.post("http://localhost:5000/run", payload, {
-      //    headers: { Authorization: token ? `Bearer ${token}` : "" }
-      // });
       setOutput(data.output);
     } catch (error: any) {
       if (error.response) {
-        setOutput(error.response.data.err.stderr || JSON.stringify(error.response.data));
+        setOutput(error.response.data.err?.stderr || error.response.data.error || JSON.stringify(error.response.data));
       } else {
         setOutput("Error connecting to server.");
       }
@@ -78,17 +107,11 @@ export default function EditorPage() {
       return;
     }
     try {
-      // await axios.post("http://localhost:5000/snippets", {
-      //   title: snippetTitle,
-      //   code,
-      //   language: "cpp"
-      // },
-      await axios.post("https://algoforge-backend-f1ht.onrender.com/snippets", {
+      await axios.post("http://localhost:5000/snippets", {
         title: snippetTitle,
         code,
-        language: "cpp"
-      },
-       {
+        language
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIsModalOpen(false);
@@ -110,68 +133,81 @@ export default function EditorPage() {
 
       {/* Toolbar */}
       <div className="editor-toolbar">
-        <div style={{display: "flex", gap: "10px", alignItems: "center"}}>
-           <h2 className="toolbar-title">C++ Environment</h2>
-           <button className="save-btn" onClick={() => setIsModalOpen(true)}>
-              💾 Save Script
+        <div style={{display: "flex", gap: "15px", alignItems: "center"}}>
+           <h2 className="toolbar-title">AlgoForge Runner</h2>
+           
+           <select 
+              value={language} 
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              style={{
+                  padding: "6px 10px", 
+                  borderRadius: "4px", 
+                  background: "#252526", 
+                  color: "white", 
+                  border: "1px solid #333",
+                  fontSize: "14px",
+                  cursor: "pointer"
+              }}
+           >
+              <option value="cpp">C++ (GCC)</option>
+              <option value="c">C (GCC)</option>
+              <option value="python">Python 3</option>
+              <option value="java">Java (OpenJDK)</option>
+              <option value="javascript">JavaScript (Node.js)</option>
+           </select>
+
+           <button className="save-btn" onClick={() => setIsModalOpen(true)} title="Cmd + S">
+              💾 Save
            </button>
         </div>
         
-        <button className="run-btn" onClick={handleSubmit} disabled={loading}>
-          {loading ? "Compiling..." : "▶ Run Code"}
+        <button 
+            className="run-btn" 
+            onClick={handleSubmit} 
+            disabled={loading}
+            title="Cmd + Enter"
+        >
+          {loading ? "Running..." : "▶ Run Code"}
         </button>
       </div>
 
       {/* Main Workspace */}
       <div className="editor-workspace">
-        
-        {/* Left Panel: EDITOR ONLY (Full Height) */}
         <div className="left-panel">
           <div className="editor-wrapper">
-            <Suspense fallback={<div className="output-content output-loading">Loading Editor...</div>}>
-              <Editor
-                height="100%"
-                defaultLanguage="cpp"
-                value={code}
-                theme="vs-dark"
-                onChange={(value) => setCode(value || "")}
-                options={{ 
-                    fontSize: 14, 
-                    minimap: { enabled: false }, 
-                    automaticLayout: true,
-                    padding: { top: 20 }
-                }}
-              />
-            </Suspense>
+            <ClientOnly fallback={<div className="output-content output-loading">Loading Editor...</div>}>
+              {() => (
+                <Editor
+                  height="100%"
+                  language={language === "c" ? "cpp" : language} // Monaco uses 'cpp' for C
+                  value={code}
+                  theme="vs-dark"
+                  onChange={(value) => setCode(value || "")}
+                  options={{ fontSize: 14, minimap: { enabled: false }, automaticLayout: true, padding: { top: 20 } }}
+                />
+              )}
+            </ClientOnly>
           </div>
         </div>
 
-        {/* Right Panel: Output (Top) & Input (Bottom) */}
         <div className="right-panel">
-            
-            {/* Output Section */}
             <div className="output-section">
                 <div className="section-label">Terminal Output</div>
                 <div className={`output-content ${getOutputClass()}`}>
-                    {loading ? "Executing remote container..." : (output || "Ready to run.")}
+                    {loading ? "Executing..." : (output || "Ready to run.")}
                 </div>
             </div>
 
-            {/* Input Section */}
             <div className="input-section">
-                <div className="section-label">
-                    <span>Custom Input (Stdin)</span>
-                </div>
+                <div className="section-label">Custom Input (Stdin)</div>
                 <textarea 
                     className="input-textarea"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Enter input for cin >> here..."
+                    placeholder="Enter input for your code here..."
                 />
             </div>
-
         </div>
-
       </div>
 
       {/* Save Modal */}
@@ -182,9 +218,10 @@ export default function EditorPage() {
             <input 
               type="text" 
               className="modal-input" 
-              placeholder="e.g., Graph DFS Implementation"
+              placeholder="e.g., Graph DFS Template"
               value={snippetTitle}
               onChange={(e) => setSnippetTitle(e.target.value)}
+              autoFocus
             />
             <div className="modal-actions">
               <button className="cancel-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
@@ -193,7 +230,6 @@ export default function EditorPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

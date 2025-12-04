@@ -2,8 +2,8 @@
 FROM node:18-slim
 
 # 2. CRITICAL STEP: Install the C++ Compiler (g++)
-# We update the package manager and install g++
-RUN apt-get update && apt-get install -y g++ build-essential
+# Install C++ (g++), C (gcc), Python (python3), and Java (default-jdk)
+RUN apt-get update && apt-get install -y g++ gcc python3 default-jdk
 
 # 3. Set the working directory inside the container
 WORKDIR /app

@@ -1,0 +1,8 @@
+{
+  "ignore": [
+    "codes/*",
+    "inputs/*",
+    "outputs/*",
+    "temp/*"
+  ]
+}

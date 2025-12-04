@@ -1,55 +1,111 @@
 const express = require("express");
-const dotenv = require("dotenv");
-dotenv.config();
 const cors = require("cors");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const path = require("path");
+const fs = require("fs");
 const { generateFile } = require("./generateFile");
-const { executeCpp } = require("./executeCpp");
-const { executePy } = require("./executePy");
-const User = require("./models/User");
 const Job = require("./models/Job");
 const Snippet = require("./models/Snippet");
-const passport = require("passport");
 const jwt = require("jsonwebtoken");
-require("./passport"); // Import the config we just made
+const passport = require("passport");
+const { executeCpp } = require("./core/executeCpp");
+const { executePy } = require("./core/executePy");
+const { executeJava } = require("./core/executeJava");
+const { executeC } = require("./core/executeC");
+const { executeJs } = require("./core/executeJs");
+
+dotenv.config();
+
+// Ensure Passport config is loaded
+require("./passport");
 
 const app = express();
 
-const mongoose = require("mongoose");
-
-// connect to database
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.log("MongoDB Error: ", err));
-
-// TRUST RENDER'S PROXY (Critical for OAuth to work on HTTPS)
-app.set("trust proxy", 1);
-
+app.set("trust proxy", 1); // Trust Render's proxy (HTTPS)
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  return res.json({ hello: "world" });
+// Database Connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.error(err));
+
+// --- HELPER FUNCTIONS ---
+
+// Function to verify JWT Token
+const verifyToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) return res.status(403).send("A token is required");
+  try {
+    const bearer = token.split(" ")[1];
+    const decoded = jwt.verify(bearer, process.env.JWT_SECRET);
+    req.user = decoded;
+  } catch (err) {
+    return res.status(401).send("Invalid Token");
+  }
+  return next();
+};
+
+// Function to create Input File (This was missing!)
+const createInputFile = async (jobId, input) => {
+    const dirInputs = path.join(__dirname, 'inputs');
+    if (!fs.existsSync(dirInputs)) {
+        fs.mkdirSync(dirInputs, { recursive: true });
+    }
+    const filename = `${jobId}.txt`;
+    const filepath = path.join(dirInputs, filename);
+    await fs.writeFileSync(filepath, input);
+    return filepath;
+};
+
+// --- AUTH ROUTES ---
+
+app.use(passport.initialize());
+
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: "/" }),
+  (req, res) => {
+    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.redirect(`${process.env.FRONTEND_URL}?token=${token}`);
+  }
+);
+
+app.get("/auth/me", verifyToken, async (req, res) => {
+  const User = require("./models/User");
+  const user = await User.findById(req.user.id);
+  res.json(user);
 });
 
+// --- EXECUTION ROUTES ---
+
 app.post("/run", async (req, res) => {
+  console.log("--> Request received for:", req.body.language); // Log 1
   const { language = "cpp", code, input } = req.body;
 
   if (code === undefined) {
     return res.status(400).json({ success: false, error: "Empty code body!" });
   }
 
-  // 1. Check if user is logged in (Optional Auth)
+  // 1. Check if user is logged in (Optional)
   let userId = null;
   const authHeader = req.headers["authorization"];
-  
   if (authHeader) {
     try {
         const token = authHeader.split(" ")[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         userId = decoded.id;
     } catch (err) {
-        // Token invalid/expired? We just treat them as anonymous.
         console.log("Invalid token sent with submission");
     }
   }
@@ -58,87 +114,65 @@ app.post("/run", async (req, res) => {
   try {
     // 2. Generate File
     const filepath = await generateFile(language, code);
+    const jobName = path.basename(filepath).split(".")[0];
     
-    // 3. Create a Job record in MongoDB (Pending state)
+    // 3. Create Input File
+    // If input is empty, we still create a file (empty string) to prevent errors
+    const inputPath = await createInputFile(jobName, input || "");
+    console.log("--> Files created:", filepath, inputPath); // Log 2
+
+    // 4. Create Job Record
     job = await new Job({ language, filepath, code, userId }).save();
-    const jobId = job["_id"];
 
-    // 4. Execute Code
-    const output = await executeCpp(filepath, input); // Use input if needed
+    // 5. Execute based on Language
+    console.log("--> Executing..."); // Log 3
+    let output;
+    if (language === "cpp") {
+        output = await executeCpp(filepath, inputPath);
+    } else if (language === "python") {
+        output = await executePy(filepath, inputPath);
+    } else if (language === "java") {
+        output = await executeJava(filepath, inputPath);
+    } else if (language === "c") {
+        output = await executeC(filepath, inputPath);
+    } else if (language === "javascript") {
+        console.log("--> Running JS runner"); // Log 4
+        output = await executeJs(filepath, inputPath);
+        console.log("--> JS Runner finished"); // Log 5
+    } else {
+        throw new Error("Unsupported Language");
+    }
 
-    // 5. Update Job with Success
+    // 6. Update Job with Success
     job.output = output;
     job.status = "success";
     await job.save();
 
-    return res.json({ filepath, output, jobId });
+    console.log("--> Success sending response"); // Log 6
+    return res.json({ filepath, output, jobId: job._id });
   } catch (err) {
-    // 6. Update Job with Error
+    console.error("--> CAUGHT ERROR:", err); // Log Error
     if (job) {
-        job.output = err.toString(); // Save the error message
+        job.output = err.toString();
         job.status = "error";
         await job.save();
     }
-    res.status(500).json({ err });
+    console.error(err);
+    res.status(500).json({ err: { stderr: err.toString() } });
   }
 });
 
-
-  
-// Initialize Passport
-app.use(passport.initialize());
-
-// authentication routes
-// 1. Trigger google login
-app.get("/auth/google", passport.authenticate("google", { scope: ["email", "profile"] }))
-
-// 2. Google Callback
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {session: false, failureRedirect: "/"}),
-  (req, res) => {
-    // user is successfully authenticated via google
-    // generate a JWT token
-    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {expiresIn : "1h"});
-
-    // redirecting to frontend with token in url
-    res.redirect(`${process.env.FRONTEND_URL}?token=${token}`);
-  }
-);
-
-// 3. Get current user (protected route)
-const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization'];
-  if(!token) return res.status(403).send('A Token is required.');
-  try {
-        const decoded = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET); // Remove 'Bearer '
-        req.user = decoded;
-    } catch (err) {
-        return res.status(401).send("Invalid Token");
-    }
-    return next();
-};
-
-
-app.get("/auth/me", verifyToken, async (req, res) => {
-    const user = await User.findById(req.user.id);
-    res.json(user);
-});
-
-// Get all jobs for the logged-in user
 app.get("/jobs/history", verifyToken, async (req, res) => {
     try {
         const jobs = await Job.find({ userId: req.user.id }).sort({ submittedAt: -1 });
         res.json(jobs);
     } catch (err) {
-        res.status(500).json({ err });
+        res.status(500).json({ error: err.message });
     }
 });
 
-
 // --- SNIPPET ROUTES ---
 
-// 1. Save a new Snippet
 app.post("/snippets", verifyToken, async (req, res) => {
     try {
         const { title, code, language } = req.body;
@@ -155,7 +189,6 @@ app.post("/snippets", verifyToken, async (req, res) => {
     }
 });
 
-// 2. Get All User Snippets (For Profile)
 app.get("/snippets", verifyToken, async (req, res) => {
     try {
         const snippets = await Snippet.find({ userId: req.user.id }).sort({ createdAt: -1 });
@@ -165,7 +198,6 @@ app.get("/snippets", verifyToken, async (req, res) => {
     }
 });
 
-// 3. Get Single Snippet (For loading into Editor)
 app.get("/snippets/:id", verifyToken, async (req, res) => {
     try {
         const snippet = await Snippet.findOne({ _id: req.params.id, userId: req.user.id });
@@ -176,6 +208,8 @@ app.get("/snippets/:id", verifyToken, async (req, res) => {
     }
 });
 
-app.listen(5000, () => {
-  console.log("Listening on port 5000!");
+// Start Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}!`);
 });
