@@ -14,10 +14,10 @@ export default function About() {
         </p>
 
         <ul style={{ marginTop: "30px", fontSize: "18px", lineHeight: "1.8", color: "#aaa" }}>
-          <li>⚡ <strong>Systems Programming:</strong> Using C++ child processes for secure execution.</li>
-          <li>🐳 <strong>Dockerization:</strong> Containerized environment for consistent production builds.</li>
-          <li>🔐 <strong>OAuth 2.0 & JWT:</strong> Secure stateless authentication with Google.</li>
-          <li>🎨 <strong>Modern UI:</strong> Built with React Router v7 and Monaco Editor.</li>
+          <li><strong>Systems Programming:</strong> Using C++ child processes for secure execution.</li>
+          <li><strong>Dockerization:</strong> Containerized environment for consistent production builds.</li>
+          <li><strong>OAuth 2.0 & JWT:</strong> Secure stateless authentication with Google.</li>
+          <li><strong>Modern UI:</strong> Built with React Router v7 and Monaco Editor.</li>
         </ul>
 
         <div style={{ marginTop: "50px", padding: "20px", borderLeft: "4px solid #2563eb", background: "#111" }}>

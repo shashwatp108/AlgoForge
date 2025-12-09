@@ -32,9 +32,9 @@ export default function LandingPage() {
 
       {/* Feature Grid */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "40px", padding: "60px 100px", borderTop: "1px solid #222" }}>
-         <FeatureCard title="🚀 Ultra Fast Execution" desc="Powered by C++ workers and Docker containers for millisecond latency." />
-         <FeatureCard title="🛡️ Secure Sandboxing" desc="Your code runs in isolated environments. Safe, reliable, and crash-proof." />
-         <FeatureCard title="💾 Cloud Storage" desc="Save your snippets and access them from anywhere in the world." />
+         <FeatureCard title="Ultra Fast Execution" desc="Powered by C++ workers and Docker containers for millisecond latency." />
+         <FeatureCard title="Secure Sandboxing" desc="Your code runs in isolated environments. Safe, reliable, and crash-proof." />
+         <FeatureCard title="Cloud Storage" desc="Save your snippets and access them from anywhere in the world." />
       </section>
     </div>
   );

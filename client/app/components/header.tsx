@@ -63,7 +63,7 @@ export default function Header() {
     }}>
       {/* Logo */}
       <Link to="/" style={{ textDecoration: "none", color: "white", fontSize: "24px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "10px" }}>
-        <span>⚡ AlgoForge</span>
+        <span>AlgoForge</span>
       </Link>
 
       {/* Navigation Links */}
